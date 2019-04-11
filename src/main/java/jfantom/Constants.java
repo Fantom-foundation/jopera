@@ -1,6 +1,6 @@
-package jfantom.util;
+package jfantom;
 
-public class Common {
+public class Constants {
 
 	public static final int CMD_LENGTH = 12;
 	public static final int NODE_NUMBER = 4;

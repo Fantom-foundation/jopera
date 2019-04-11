@@ -19,7 +19,6 @@ import jfantom.dag.Vertex;
 import jfantom.msg.BlocksMsg;
 import jfantom.msg.HeightMsg;
 import jfantom.util.Appender;
-import jfantom.util.Common;
 import jfantom.util.ExecService;
 import jfantom.util.NetConn;
 import jfantom.util.NetUtils;
@@ -348,7 +347,7 @@ public class OperaChain {
 		try {
 			request = netConn.getDec().read().getBytes();
 
-			String command = Utils.bytesToCommand(Appender.slice(request, 0, Common.CMD_LENGTH));
+			String command = Utils.bytesToCommand(Appender.slice(request, 0, Constants.CMD_LENGTH));
 			// System.out.printf("Received %s command\n", command)
 			switch (command) {
 			case "rstBlocks":
@@ -366,7 +365,7 @@ public class OperaChain {
 	}
 
 	public void handleRstBlocks(byte[] request) {
-		byte[] bytes = Appender.sliceFromToEnd(request, Common.CMD_LENGTH);
+		byte[] bytes = Appender.sliceFromToEnd(request, Constants.CMD_LENGTH);
 		HeightMsg payload = Utils.gobDecode(bytes, HeightMsg.class);
 
 		Block[] blocksData = null;
@@ -406,7 +405,7 @@ public class OperaChain {
 	}
 
 	public void handleGetBlocks(byte[] request) {
-		byte[] bytes = Appender.sliceFromToEnd(request, Common.CMD_LENGTH);
+		byte[] bytes = Appender.sliceFromToEnd(request, Constants.CMD_LENGTH);
 		BlocksMsg payload = Utils.gobDecode(bytes, BlocksMsg.class);
 
 		MakeMutex.writeLock().lock();
@@ -489,7 +488,7 @@ public class OperaChain {
 			if (newVertex.PrevSelf.Frame == newVertex.PrevOther.Frame) {
 				newVertex.FlagTable = g.Merge(newVertex.PrevSelf.FlagTable, newVertex.PrevOther.FlagTable,
 						newVertex.PrevSelf.Frame);
-				if (newVertex.FlagTable.size() >= Common.SUPRA_MAJOR) {
+				if (newVertex.FlagTable.size() >= Constants.SUPRA_MAJOR) {
 					newVertex.Root = true;
 					newVertex.Frame = newVertex.PrevSelf.Frame + 1;
 					newVertex.RootTable = new HashMap<String, Integer>(newVertex.FlagTable);

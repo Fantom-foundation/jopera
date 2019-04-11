@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jfantom.Constants;
 import jfantom.util.Appender;
-import jfantom.util.Common;
 
 /**
  * Graph is imaginary OperaChain
@@ -90,7 +90,7 @@ public class Graph {
 
 		for (String key : ccList.keySet()) {
 			Map<String, Boolean> val = ccList.get(key);
-			if (val.size() >= Common.SUBB_MAJOR) {
+			if (val.size() >= Constants.SUBB_MAJOR) {
 				Vertex prevRoot = ChkClotho.get(key);
 				ClothoList.put(key, prevRoot);
 				prevRoot.Clotho = true;
@@ -159,7 +159,7 @@ public class Graph {
 					}
 				}
 
-				if (maxVal >= Common.SUPRA_MAJOR) {
+				if (maxVal >= Constants.SUPRA_MAJOR) {
 					System.out.println("atropos" + " " + clotho.Signature + " " + clotho.Frame + " " + maxInd);
 					clotho.Atropos = true;
 					clotho.AtroposTime = maxInd;
