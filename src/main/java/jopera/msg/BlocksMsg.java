@@ -1,6 +1,6 @@
-package jfantom.msg;
+package jopera.msg;
 
-import jfantom.Block;
+import jopera.Block;
 
 /**
  * BlocksMsg is structrue for sending message of sending blocks

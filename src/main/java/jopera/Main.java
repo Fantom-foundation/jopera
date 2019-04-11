@@ -1,6 +1,6 @@
-package jfantom;
+package jopera;
 
-import jfantom.util.ExecService;
+import jopera.util.ExecService;
 
 public class Main {
 

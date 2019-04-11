@@ -1,4 +1,4 @@
-package jfantom.util;
+package jopera.util;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;

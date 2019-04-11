@@ -1,4 +1,4 @@
-package jfantom;
+package jopera;
 
 /**
  * OperaChainIterator is used to iterate over blockchain blocks

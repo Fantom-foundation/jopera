@@ -1,4 +1,4 @@
-package jfantom.util;
+package jopera.util;
 
 import java.lang.reflect.Type;
 import java.util.Base64;

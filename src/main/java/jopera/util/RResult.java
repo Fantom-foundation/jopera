@@ -1,4 +1,4 @@
-package jfantom.util;
+package jopera.util;
 
 /**
  * A generic returned result with a result of type T and a possible returned

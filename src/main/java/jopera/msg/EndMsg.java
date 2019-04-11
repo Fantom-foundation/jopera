@@ -1,4 +1,4 @@
-package jfantom.msg;
+package jopera.msg;
 
 /**
  * EndMsg is structure for sending close packet

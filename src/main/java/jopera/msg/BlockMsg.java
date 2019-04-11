@@ -1,4 +1,4 @@
-package jfantom.msg;
+package jopera.msg;
 
 /**
  * BlockMsg is structrue for sending message of sending blocks

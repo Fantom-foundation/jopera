@@ -1,9 +1,9 @@
-package jfantom;
+package jopera;
 
 import java.nio.ByteBuffer;
 
-import jfantom.util.Appender;
-import jfantom.util.JsonUtils;
+import jopera.util.Appender;
+import jopera.util.JsonUtils;
 
 /**
  * Block is structure of event block

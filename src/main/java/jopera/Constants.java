@@ -1,4 +1,4 @@
-package jfantom;
+package jopera;
 
 public class Constants {
 

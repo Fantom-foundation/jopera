@@ -1,4 +1,4 @@
-package jfantom.dag;
+package jopera.dag;
 
 import java.util.HashMap;
 import java.util.Map;

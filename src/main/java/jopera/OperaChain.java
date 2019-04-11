@@ -1,4 +1,4 @@
-package jfantom;
+package jopera;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,15 +14,15 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
-import jfantom.dag.Graph;
-import jfantom.dag.Vertex;
-import jfantom.msg.BlocksMsg;
-import jfantom.msg.HeightMsg;
-import jfantom.util.Appender;
-import jfantom.util.ExecService;
-import jfantom.util.NetConn;
-import jfantom.util.NetUtils;
-import jfantom.util.RResult;
+import jopera.dag.Graph;
+import jopera.dag.Vertex;
+import jopera.msg.BlocksMsg;
+import jopera.msg.HeightMsg;
+import jopera.util.Appender;
+import jopera.util.ExecService;
+import jopera.util.NetConn;
+import jopera.util.NetUtils;
+import jopera.util.RResult;
 
 public class OperaChain {
 

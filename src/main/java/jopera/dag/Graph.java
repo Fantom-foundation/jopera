@@ -1,12 +1,12 @@
-package jfantom.dag;
+package jopera.dag;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jfantom.Constants;
-import jfantom.util.Appender;
+import jopera.Constants;
+import jopera.util.Appender;
 
 /**
  * Graph is imaginary OperaChain

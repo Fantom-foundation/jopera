@@ -1,4 +1,4 @@
-package jfantom;
+package jopera;
 
 import java.io.File;
 import java.math.BigInteger;
@@ -6,8 +6,8 @@ import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-import jfantom.msg.BlocksMsg;
-import jfantom.util.JsonUtils;
+import jopera.msg.BlocksMsg;
+import jopera.util.JsonUtils;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
