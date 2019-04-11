@@ -7,7 +7,7 @@ public class Main {
 	/**
 	 * DNSaddress initializes ip
 	 */
-	public static final String[] DNSaddress = new String[]{
+	public static final String[] DNS_ADDRESSES = new String[] {
 		"localhost:3001",
 		"localhost:3002",
 		"localhost:3003",
@@ -21,16 +21,15 @@ public class Main {
 //		"localhost:3011",
 //		"localhost:3012",
 
-
-		//"3003",
-		//"3004",
+			// "3003",
+			// "3004",
 	};
 
 	public static void main(String[] args) {
-		//Initialize
+		// Initialize
 		String myName = args[0];
 
-		//Operachain start
+		// Operachain start
 		OperaChain oc = OperaChain.OpenOperaChain(myName);
 		oc.MyGraph = oc.NewGraph();
 		switch (args[1]) {
@@ -52,4 +51,3 @@ public class Main {
 		}
 	}
 }
-

@@ -5,7 +5,6 @@ import java.util.Map;
 
 /**
  * Vertex is imaginary event block
- * @author qn
  */
 public class Vertex {
 	public boolean Root;
@@ -17,16 +16,14 @@ public class Vertex {
 	public Vertex PrevSelf;
 	public Vertex PrevOther;
 	public int Frame;
-	public Map<String,Integer> FlagTable;
+	public Map<String, Integer> FlagTable;
 	public byte[] Hash;
-	public Map<String,Integer> RootTable;
-
+	public Map<String, Integer> RootTable;
 
 	/**
 	 * Constructor
 	 */
 	public Vertex() {
-		FlagTable = new HashMap<String,Integer>();
+		FlagTable = new HashMap<String, Integer>();
 	}
 }
-

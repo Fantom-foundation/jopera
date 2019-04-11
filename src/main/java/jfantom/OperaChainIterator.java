@@ -31,6 +31,7 @@ public class OperaChainIterator {
 
 	/**
 	 * Show represent Current Block
+	 * 
 	 * @return
 	 */
 	public Block Show() {
@@ -43,4 +44,3 @@ public class OperaChainIterator {
 		return block;
 	}
 }
-

@@ -36,10 +36,10 @@ public class OperaChain {
 	ReadWriteLock MakeMutex;
 	String MyAddress;
 	String[] KnownAddress;
-	Map<String,Integer> KnownHeight;
+	Map<String, Integer> KnownHeight;
 	byte[] MyTip;
-	Map<String,byte[]> KnownTips;
-	Map<String,SocketChannel> SendConn;
+	Map<String, byte[]> KnownTips;
+	Map<String, SocketChannel> SendConn;
 	String MyName;
 	Graph MyGraph;
 	boolean UpdateChk;
@@ -53,9 +53,9 @@ public class OperaChain {
 		MyName = myName;
 
 		MakeMutex = new ReentrantReadWriteLock();
-		KnownHeight = new HashMap<String,Integer>();
-		KnownTips = new HashMap<String,byte[]>();
-		SendConn = new HashMap<String,SocketChannel>();
+		KnownHeight = new HashMap<String, Integer>();
+		KnownTips = new HashMap<String, byte[]>();
+		SendConn = new HashMap<String, SocketChannel>();
 
 		store = new Store(Db);
 	}
@@ -79,6 +79,7 @@ public class OperaChain {
 
 	/**
 	 * OpenOperachain is initialization of OperaChain
+	 *
 	 * @param name
 	 * @return
 	 */
@@ -93,16 +94,14 @@ public class OperaChain {
 			return oc;
 		}
 
-		DB db = DBMaker.fileDB(new File(dbFile))
-	            .transactionEnable().closeOnJvmShutdown().fileChannelEnable()
-	            .make();
+		DB db = DBMaker.fileDB(new File(dbFile)).transactionEnable().closeOnJvmShutdown().fileChannelEnable().make();
 		Store store = new Store(db);
 
 		String address = String.format("localhost:%s", name);
 
 		byte[] tip = store.getBlock(GenesisBlock);
 
-		//genesis block create
+		// genesis block create
 		oc = new OperaChain(db, address, tip, name);
 		oc.UpdateAddress();
 		oc.UpdateState();
@@ -118,37 +117,27 @@ public class OperaChain {
 
 		Block genesis = Block.NewBlock(name, null, null, 1);
 
-		DB db = DBMaker.fileDB(new File(dbFile))
-	            .transactionEnable().closeOnJvmShutdown().fileChannelEnable()
-	            .make();
+		DB db = DBMaker.fileDB(new File(dbFile)).transactionEnable().closeOnJvmShutdown().fileChannelEnable().make();
 		Store store = new Store(db);
 		store.updateBlock(genesis.Hash, genesis.Serialize());
 		store.updateBlock(GenesisBlock, genesis.Hash);
 		byte[] tip = genesis.Hash;
 		db.commit();
 
-		Map<String,Integer> heights = new HashMap<String,Integer>();
-		Map<String,byte[]> tips = new HashMap<String,byte[]>();
+		Map<String, Integer> heights = new HashMap<String, Integer>();
+		Map<String, byte[]> tips = new HashMap<String, byte[]>();
 		heights.put(name, genesis.Height);
 		tips.put(name, genesis.Hash);
 
-		OperaChain oc = new OperaChain(
-				db,
-				new ReentrantReadWriteLock(),
-				address,
-				new String[] {},
-				heights,
-				tip,
-				tips,
-				new HashMap<String,SocketChannel>(),
-				name);
+		OperaChain oc = new OperaChain(db, new ReentrantReadWriteLock(), address, new String[] {}, heights, tip, tips,
+				new HashMap<String, SocketChannel>(), name);
 
 		return oc;
 	}
 
 	// UpdateAddress initializes IP
 	public void UpdateAddress() {
-		for (String node : Main.DNSaddress) {
+		for (String node : Main.DNS_ADDRESSES) {
 			if (!node.equals(MyAddress)) {
 				if (!nodeIsKnown(node)) {
 					KnownAddress = Appender.append(KnownAddress, node);
@@ -167,15 +156,15 @@ public class OperaChain {
 		}
 	}
 
-	//UpdateState initializes state of Operachain
+	// UpdateState initializes state of Operachain
 	public void UpdateState() {
-		HashMap<String, Boolean> chk = new HashMap<String,Boolean>();
-		String[] mylist = new String[] {new String(MyTip)};
+		HashMap<String, Boolean> chk = new HashMap<String, Boolean>();
+		String[] mylist = new String[] { new String(MyTip) };
 		chk.put(new String(MyTip), true);
 
 		while (mylist.length > 0) {
-			String currentHash = mylist[mylist.length-1];
-			mylist = Appender.slice(mylist, 0, mylist.length-1);
+			String currentHash = mylist[mylist.length - 1];
+			mylist = Appender.slice(mylist, 0, mylist.length - 1);
 
 			OperaChainIterator oci = Iterator(currentHash.getBytes());
 			Block block = oci.Show();
@@ -254,10 +243,10 @@ public class OperaChain {
 		return oci;
 	}
 
-	//PrintChain initializes state of Operachain
+	// PrintChain initializes state of Operachain
 	public void PrintChain() {
-		Map<String,Boolean> chk = new HashMap<String,Boolean>();
-		String[] mylist = new String[] { new String(MyTip)};
+		Map<String, Boolean> chk = new HashMap<String, Boolean>();
+		String[] mylist = new String[] { new String(MyTip) };
 		chk.put(new String(MyTip), true);
 
 		while (mylist.length > 0) {
@@ -300,19 +289,19 @@ public class OperaChain {
 			socketChannel = SocketChannel.open();
 			socketChannel.connect(new InetSocketAddress(addr, ss.socket().getLocalPort()));
 			socketChannel.write(ByteBuffer.wrap(data));
-			//conn.close();
+			// conn.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 
 			System.out.printf("%s is not available\n", addr);
 
-			//var updatedNodes []string
-			//for _, node := range knownAddress {
-			//	if node != addr {
-			//		updatedNodes = append(updatedNodes, node)
-			//	}
-			//}
-			//knownAddress = updatedNodes
+			// var updatedNodes []string
+			// for _, node := range knownAddress {
+			// if node != addr {
+			// updatedNodes = append(updatedNodes, node)
+			// }
+			// }
+			// knownAddress = updatedNodes
 		}
 	}
 
@@ -328,16 +317,16 @@ public class OperaChain {
 				SocketChannel conn = ss.accept();
 				ExecService.go(() -> handleConnection(new NetConn(MyAddress, conn)));
 			}
-			//ss.close();
+			// ss.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	//Sync is process for request other nodes blocks
+	// Sync is process for request other nodes blocks
 	public void Sync() {
 		while (true) {
-			//requestVersion
+			// requestVersion
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
@@ -359,8 +348,8 @@ public class OperaChain {
 		try {
 			request = netConn.getDec().read().getBytes();
 
-			String command = Utils.bytesToCommand(Appender.slice(request, 0, Common.commandLength));
-			//System.out.printf("Received %s command\n", command)
+			String command = Utils.bytesToCommand(Appender.slice(request, 0, Common.CMD_LENGTH));
+			// System.out.printf("Received %s command\n", command)
 			switch (command) {
 			case "rstBlocks":
 				handleRstBlocks(request);
@@ -377,7 +366,7 @@ public class OperaChain {
 	}
 
 	public void handleRstBlocks(byte[] request) {
-		byte[] bytes = Appender.sliceFromToEnd(request, Common.commandLength);
+		byte[] bytes = Appender.sliceFromToEnd(request, Common.CMD_LENGTH);
 		HeightMsg payload = Utils.gobDecode(bytes, HeightMsg.class);
 
 		Block[] blocksData = null;
@@ -410,17 +399,14 @@ public class OperaChain {
 		sendData(payload.AddrFrom, request2);
 
 		/*
-			if chk {
-				data := EndMsg{myAddress}
-				payload2 := gobEncode(data)
-				reqeust := append(commandToBytes("endBlocks"), payload2...)
-				sendData(payload.AddrFrom, reqeust)
-			}
-		*/
+		 * if chk { data := EndMsg{myAddress} payload2 := gobEncode(data) reqeust :=
+		 * append(commandToBytes("endBlocks"), payload2...) sendData(payload.AddrFrom,
+		 * reqeust) }
+		 */
 	}
 
 	public void handleGetBlocks(byte[] request) {
-		byte[] bytes = Appender.sliceFromToEnd(request, Common.commandLength);
+		byte[] bytes = Appender.sliceFromToEnd(request, Common.CMD_LENGTH);
 		BlocksMsg payload = Utils.gobDecode(bytes, BlocksMsg.class);
 
 		MakeMutex.writeLock().lock();
@@ -433,14 +419,14 @@ public class OperaChain {
 		}
 
 		if (chk) {
-			//System.out.println("Received a new block")
+			// System.out.println("Received a new block")
 			MakeBlock(Utils.FindName(payload.AddrFrom));
 		}
 
 		MakeMutex.writeLock().unlock();
 	}
 
-	//MakeBlock creates a new block
+	// MakeBlock creates a new block
 	public void MakeBlock(String name) {
 		byte[] tip = store.getBlock(GenesisBlock);
 		byte[] tipData = store.getBlock(tip);
@@ -451,23 +437,17 @@ public class OperaChain {
 		AddBlock(newBlock);
 		MyGraph.Tip = BuildGraph(newBlock.Hash, MyGraph.ChkVertex, MyGraph);
 		System.out.println("create new block");
-		//UpdateChk = true
+		// UpdateChk = true
 	}
 
 	/**
 	 * Graph
 	 */
-	//NewGraph is creating graph
+	// NewGraph is creating graph
 	public Graph NewGraph() {
-		Graph newGraph = new Graph(
-			null,
-			new HashMap<String,Vertex>(),
-			new HashMap<String,Vertex>(),
-			new HashMap<String,Vertex>(),
-			new HashMap<String,Vertex>(),
-			new HashMap<String,Map<String,Long>>(),
-			new Vertex[] {}
-		);
+		Graph newGraph = new Graph(null, new HashMap<String, Vertex>(), new HashMap<String, Vertex>(),
+				new HashMap<String, Vertex>(), new HashMap<String, Vertex>(), new HashMap<String, Map<String, Long>>(),
+				new Vertex[] {});
 
 		byte[] tip = store.getBlock(GenesisBlock);
 		newGraph.Tip = BuildGraph(tip, newGraph.ChkVertex, newGraph);
@@ -475,8 +455,8 @@ public class OperaChain {
 		return newGraph;
 	}
 
-	//BuildGraph initialize graph based on DB
-	public Vertex BuildGraph(byte[] hash, Map<String,Vertex> rV, Graph g) {
+	// BuildGraph initialize graph based on DB
+	public Vertex BuildGraph(byte[] hash, Map<String, Vertex> rV, Graph g) {
 		Vertex newVertex = rV.get(new String(hash));
 		if (newVertex != null) {
 			return newVertex;
@@ -507,15 +487,16 @@ public class OperaChain {
 
 		if (newVertex.PrevSelf != null) {
 			if (newVertex.PrevSelf.Frame == newVertex.PrevOther.Frame) {
-				newVertex.FlagTable = g.Merge(newVertex.PrevSelf.FlagTable, newVertex.PrevOther.FlagTable, newVertex.PrevSelf.Frame);
-				if (newVertex.FlagTable.size() >= Common.supraMajor) {
+				newVertex.FlagTable = g.Merge(newVertex.PrevSelf.FlagTable, newVertex.PrevOther.FlagTable,
+						newVertex.PrevSelf.Frame);
+				if (newVertex.FlagTable.size() >= Common.SUPRA_MAJOR) {
 					newVertex.Root = true;
 					newVertex.Frame = newVertex.PrevSelf.Frame + 1;
-					newVertex.RootTable = new HashMap<String,Integer>(newVertex.FlagTable);
-					newVertex.FlagTable = new HashMap<String,Integer>();
+					newVertex.RootTable = new HashMap<String, Integer>(newVertex.FlagTable);
+					newVertex.FlagTable = new HashMap<String, Integer>();
 					newVertex.FlagTable.put(newVertex.Signature, newVertex.Frame);
 
-					g.ChkClotho.put(newVertex.Frame+"_"+newVertex.Signature, newVertex);
+					g.ChkClotho.put(newVertex.Frame + "_" + newVertex.Signature, newVertex);
 					// Clotho check
 
 					g.ClothoChecking(newVertex);
@@ -527,16 +508,16 @@ public class OperaChain {
 			} else if (newVertex.PrevSelf.Frame > newVertex.PrevOther.Frame) {
 				newVertex.Root = false;
 				newVertex.Frame = newVertex.PrevSelf.Frame;
-				newVertex.FlagTable = new HashMap<String,Integer>(newVertex.PrevSelf.FlagTable);
+				newVertex.FlagTable = new HashMap<String, Integer>(newVertex.PrevSelf.FlagTable);
 			} else {
 				newVertex.Root = true;
 				newVertex.Frame = newVertex.PrevOther.Frame;
-				Vertex otherRoot = g.ChkClotho.get(newVertex.PrevOther.Frame+"_"+newVertex.PrevOther.Signature);
-				newVertex.RootTable = g.Merge(newVertex.PrevSelf.FlagTable, otherRoot.RootTable, newVertex.Frame-1);
-				newVertex.FlagTable = new HashMap<String,Integer>(newVertex.PrevOther.FlagTable);
+				Vertex otherRoot = g.ChkClotho.get(newVertex.PrevOther.Frame + "_" + newVertex.PrevOther.Signature);
+				newVertex.RootTable = g.Merge(newVertex.PrevSelf.FlagTable, otherRoot.RootTable, newVertex.Frame - 1);
+				newVertex.FlagTable = new HashMap<String, Integer>(newVertex.PrevOther.FlagTable);
 				newVertex.FlagTable.put(newVertex.Signature, newVertex.Frame);
 
-				g.ChkClotho.put(newVertex.Frame+"_"+newVertex.Signature, newVertex);
+				g.ChkClotho.put(newVertex.Frame + "_" + newVertex.Signature, newVertex);
 				// Clotho check
 				g.ClothoChecking(newVertex);
 
@@ -546,7 +527,7 @@ public class OperaChain {
 			newVertex.Root = true;
 			newVertex.Frame = 0;
 			newVertex.FlagTable.put(newVertex.Signature, newVertex.Frame);
-			g.ClothoList.put(newVertex.Frame+"_"+newVertex.Signature, newVertex);
+			g.ClothoList.put(newVertex.Frame + "_" + newVertex.Signature, newVertex);
 		}
 
 		return newVertex;

@@ -11,4 +11,3 @@ public class EndMsg {
 		AddrFrom = addrFrom;
 	}
 }
-

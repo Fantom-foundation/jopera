@@ -9,6 +9,7 @@ public class NetUtils {
 
 	/**
 	 * Creates a server socket and binds to the specified address
+	 * 
 	 * @param bindAddr a bind address in the form of ":9000"
 	 * @return
 	 */
@@ -18,8 +19,8 @@ public class NetUtils {
 			String addr = parseAddress(bindAddr);
 			ServerSocketChannel serverSocket = ServerSocketChannel.open();
 			serverSocket.configureBlocking(false);
-	        serverSocket.socket().bind(new InetSocketAddress(addr, port));
-	        return new RResult<>(serverSocket, null);
+			serverSocket.socket().bind(new InetSocketAddress(addr, port));
+			return new RResult<>(serverSocket, null);
 		} catch (Exception e) {
 			return new RResult<>(null, error.Errorf(e.getMessage()));
 		}
@@ -48,7 +49,7 @@ public class NetUtils {
 	public static String getUnusedNetAddr() {
 		ServerSocket server = null;
 		try {
-			server= new ServerSocket(0, 50);
+			server = new ServerSocket(0, 50);
 			return String.format("127.0.0.1:%d", server.getLocalPort());
 		} catch (Exception e) {
 			// If there's an error it likely means no ports available

@@ -6,10 +6,10 @@ package jfantom.msg;
 public class BlockMsg {
 	public String AddrFrom;
 	public byte[] Block;
+
 	public BlockMsg(String addrFrom, byte[] block) {
 		super();
 		AddrFrom = addrFrom;
 		Block = block;
 	}
 }
-

@@ -1,7 +1,8 @@
 package jfantom.util;
 
 /**
- * A generic returned result with a result of type T and a possible returned error
+ * A generic returned result with a result of type T and a possible returned
+ * error
  *
  * @param <T>
  */

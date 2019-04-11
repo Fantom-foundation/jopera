@@ -42,8 +42,8 @@ public class NetConn {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("netConn [target=").append(target).append(", conn=").append(conn).
-				append(", dec=").append(dec).append(", enc=").append(enc).append("]");
+		builder.append("netConn [target=").append(target).append(", conn=").append(conn).append(", dec=").append(dec)
+				.append(", enc=").append(enc).append("]");
 		return builder.toString();
 	}
 }

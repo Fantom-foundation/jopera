@@ -7,11 +7,11 @@ import jfantom.Block;
  */
 public class BlocksMsg {
 	public String AddrFrom;
-	public Block[]	Blocks;
+	public Block[] Blocks;
+
 	public BlocksMsg(String addrFrom, Block[] blocks) {
 		super();
 		AddrFrom = addrFrom;
 		Blocks = blocks;
 	}
 }
-

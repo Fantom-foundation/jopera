@@ -14,7 +14,7 @@ import org.apache.log4j.Level;
 public class Logger {
 	org.apache.log4j.Logger logger;
 
-	Map<String,Object> map;
+	Map<String, Object> map;
 
 	public Logger(org.apache.log4j.Logger logger) {
 		this.logger = logger;
@@ -83,8 +83,7 @@ public class Logger {
 	}
 
 	private String getOutput(Object message) {
-		return "THRE" + Thread.currentThread().getId() + " >> " + message +
-				(map == null ? "" : " ::" + mapToString());
+		return "THRE" + Thread.currentThread().getId() + " >> " + message + (map == null ? "" : " ::" + mapToString());
 	}
 
 	private String mapToString() {

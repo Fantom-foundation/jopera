@@ -9,6 +9,8 @@ import java.util.Arrays;
 import jfantom.msg.BlocksMsg;
 import jfantom.util.JsonUtils;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class Utils {
 	public static byte[] commandToBytes(String command) {
@@ -50,7 +52,7 @@ public class Utils {
 
 	// IntToHex converts an int64 to a byte array
 	public static byte[] IntToHex(long num) {
-		String hexString = "0x" + String.format("%040X", new BigInteger(num+"", 10));
+		String hexString = "0x" + String.format("%040X", new BigInteger(num + "", 10));
 		return hexString.getBytes();
 	}
 
@@ -69,9 +71,23 @@ public class Utils {
 	/**
 	 * File utils
 	 */
-
 	public static boolean fileExist(String filePath) {
 		File file = Paths.get(filePath).toFile();
 		return file.exists();
+	}
+
+	/**
+	 * Hash utils
+	 */
+	public static byte[] SHA256(byte[] hashBytes) {
+		MessageDigest digest;
+		try {
+			digest = MessageDigest.getInstance("SHA-256");
+			byte[] encodedhash = digest.digest(hashBytes);
+			return encodedhash;
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 }

@@ -11,7 +11,7 @@ public class Store {
 	public static final String blockPrefix = "block";
 
 	DB Db;
-	private ConcurrentNavigableMap<byte[],byte[]> blockMap;
+	private ConcurrentNavigableMap<byte[], byte[]> blockMap;
 
 	Store(DB Db) {
 		this.Db = Db;

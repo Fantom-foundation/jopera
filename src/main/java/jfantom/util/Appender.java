@@ -4,7 +4,7 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 
 /**
- * An Appender provides a means to express the append and slide operations.
+ * An Appender provides a means to express the append and slice operations.
  *
  * @author qn
  */
@@ -67,7 +67,7 @@ public class Appender {
 		if (a == null) {
 			return Arrays.copyOf(b, b.length);
 		}
-		if (b==null) {
+		if (b == null) {
 			return Arrays.copyOf(a, a.length);
 		}
 
@@ -81,12 +81,12 @@ public class Appender {
 
 		T[] copy = a;
 		if (countA == -1) {
-			copy= Arrays.copyOf(a, a.length + b.length);
+			copy = Arrays.copyOf(a, a.length + b.length);
 		} else if (countA + b.length > a.length) {
-			copy= Arrays.copyOf(a, countA + b.length);
+			copy = Arrays.copyOf(a, countA + b.length);
 		}
 
-		for (int i = 0; i < b.length ; ++i) {
+		for (int i = 0; i < b.length; ++i) {
 			copy[countA + i] = b[i];
 		}
 		return copy;
@@ -94,6 +94,7 @@ public class Appender {
 
 	/**
 	 * Appends an object b into an array
+	 * 
 	 * @param a
 	 * @param b
 	 * @return
@@ -115,11 +116,10 @@ public class Appender {
 			}
 		}
 
-		if (countA != -1 && countA <= a.length -1 ) {
+		if (countA != -1 && countA <= a.length - 1) {
 			a[countA] = b;
 			return a;
-		}
-		else {
+		} else {
 			// need to create a larger array
 			T[] copy = Arrays.copyOf(a, a.length + 1);
 			copy[a.length] = b;

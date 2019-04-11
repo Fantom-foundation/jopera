@@ -42,15 +42,14 @@ public class JsonDecoder {
 
 		try {
 			String s = read();
-			logger.field("s", s)
-				.debug("decode(T) parsed resp");
+			logger.field("s", s).debug("decode(T) parsed resp");
 			if (s == null || s.isEmpty()) {
 				return null;
 			}
 
-		    T t = (T) JsonUtils.StringToObject(s, resp.getClass());
-		    logger.field("resp", resp).debug("decode(T) parsed resp");
-		    return t;
+			T t = (T) JsonUtils.StringToObject(s, resp.getClass());
+			logger.field("resp", resp).debug("decode(T) parsed resp");
+			return t;
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
@@ -59,13 +58,13 @@ public class JsonDecoder {
 
 	public String read() throws IOException {
 		Writer writer = new StringWriter();
-        if (r.isConnected() && r.read(buffer) != -1) {
-        	buffer.clear();
-            writer.write(new String(buffer.array()));
-            buffer.compact();
-        }
-	    writer.flush();
+		if (r.isConnected() && r.read(buffer) != -1) {
+			buffer.clear();
+			writer.write(new String(buffer.array()));
+			buffer.compact();
+		}
+		writer.flush();
 		writer.close();
-	    return writer.toString();
+		return writer.toString();
 	}
 }

@@ -16,9 +16,8 @@ public class Block {
 	byte[] Hash;
 	int Height;
 
-	//NewBlock is creation of event block
-	public Block(long timestamp, String name, byte[] prevSelfHash, byte[] prevOtherHash, byte[] bs,
-			int height) {
+	// NewBlock is creation of event block
+	public Block(long timestamp, String name, byte[] prevSelfHash, byte[] prevOtherHash, byte[] bs, int height) {
 		Timestamp = timestamp;
 		Signature = name;
 		PrevSelfHash = prevSelfHash;
@@ -34,10 +33,9 @@ public class Block {
 	}
 
 	public static Block NewBlock(String name, byte[] PrevSelfHash, byte[] PrevOtherHash, int height) {
-		Block block = new Block(System.currentTimeMillis(), name,
-				PrevSelfHash, PrevOtherHash, new byte[]{}, height);
+		Block block = new Block(System.currentTimeMillis(), name, PrevSelfHash, PrevOtherHash, new byte[] {}, height);
 		byte[] data = prepareData(block);
-		byte[] hash = jfantom.util.Hash.SHA256(data);
+		byte[] hash = Utils.SHA256(data);
 		block.Hash = Appender.sliceFromToEnd(hash, 0);
 		return block;
 	}
@@ -69,4 +67,3 @@ public class Block {
 		return block;
 	}
 }
-

@@ -2,8 +2,8 @@ package jfantom.util;
 
 public class Common {
 
-	public static final int commandLength = 12;
-	public static final int nodeNumber = 4;
-	public static final int supraMajor = 3;
-	public static final int subMajor = 2;
+	public static final int CMD_LENGTH = 12;
+	public static final int NODE_NUMBER = 4;
+	public static final int SUPRA_MAJOR = 3;
+	public static final int SUBB_MAJOR = 2;
 }
