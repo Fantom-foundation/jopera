@@ -20,9 +20,6 @@ public class Main {
 //		"localhost:3010",
 //		"localhost:3011",
 //		"localhost:3012",
-
-			// "3003",
-			// "3004",
 	};
 
 	public static void main(String[] args) {
@@ -38,11 +35,7 @@ public class Main {
 
 			ExecService.go(() -> oc.Sync());
 
-			try {
-				Thread.sleep(300 * 1000); // 300 seconds
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			ExecService.sleep(300 * 1000); // 300 seconds
 		case "print":
 			oc.PrintChain();
 

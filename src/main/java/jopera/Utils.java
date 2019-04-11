@@ -50,19 +50,29 @@ public class Utils {
 		return file.exists();
 	}
 
-	// IntToHex converts an int64 to a byte array
+	/**
+	 * IntToHex converts an int64 to a byte array
+	 */
 	public static byte[] IntToHex(long num) {
 		String hexString = "0x" + String.format("%040X", new BigInteger(num + "", 10));
 		return hexString.getBytes();
 	}
 
-	// FindAddr find address based on name
+	/**
+	 * FindAddr find address based on name
+	 * @param name
+	 * @return
+	 */
 	public static String FindAddr(String name) {
 		String addr = String.format("localhost:%s", name);
 		return addr;
 	}
 
-	// FindName find name based on address
+	/**
+	 * FindName find name based on address
+	 * @param addr
+	 * @return
+	 */
 	public static String FindName(String addr) {
 		String name = addr.split(":")[1];
 		return name;

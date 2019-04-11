@@ -18,4 +18,12 @@ public class ExecService {
 	public static <T> Future<T> go(Callable<T> callable) {
 		return executor.submit(callable);
 	}
+
+	public static void sleep(int millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 }

@@ -26,10 +26,10 @@ import jopera.util.RResult;
 
 public class OperaChain {
 
-	static final String dbFileFmt = "Operachain_%s.db";
-	static final String blocksBucket = "blocks";
+	static final String DB_FILE_FMT = "Operachain_%s.db";
+	static final String BLOCKS_BUCKET = "blocks";
 
-	static final byte[] GenesisBlock = "l".getBytes();
+	static final byte[] GENESIS_BYTES = "l".getBytes();
 
 	DB Db;
 	ReadWriteLock MakeMutex;
@@ -43,6 +43,8 @@ public class OperaChain {
 	Graph MyGraph;
 	boolean UpdateChk;
 	Store store;
+
+	ServerSocketChannel ss;
 
 	public OperaChain(DB db, String myAddress, byte[] myTip, String myName) {
 		super();
@@ -83,7 +85,7 @@ public class OperaChain {
 	 * @return
 	 */
 	public static OperaChain OpenOperaChain(String name) {
-		String dbFile = String.format(dbFileFmt, name);
+		String dbFile = String.format(DB_FILE_FMT, name);
 
 		OperaChain oc;
 		if (!Utils.fileExist(dbFile)) {
@@ -98,7 +100,7 @@ public class OperaChain {
 
 		String address = String.format("localhost:%s", name);
 
-		byte[] tip = store.getBlock(GenesisBlock);
+		byte[] tip = store.getBlock(GENESIS_BYTES);
 
 		// genesis block create
 		oc = new OperaChain(db, address, tip, name);
@@ -112,14 +114,14 @@ public class OperaChain {
 	public static OperaChain CreateOperachain(String name) {
 		String address = Utils.FindAddr(name);
 
-		String dbFile = String.format(dbFileFmt, name);
+		String dbFile = String.format(DB_FILE_FMT, name);
 
 		Block genesis = Block.NewBlock(name, null, null, 1);
 
 		DB db = DBMaker.fileDB(new File(dbFile)).transactionEnable().closeOnJvmShutdown().fileChannelEnable().make();
 		Store store = new Store(db);
 		store.updateBlock(genesis.Hash, genesis.Serialize());
-		store.updateBlock(GenesisBlock, genesis.Hash);
+		store.updateBlock(GENESIS_BYTES, genesis.Hash);
 		byte[] tip = genesis.Hash;
 		db.commit();
 
@@ -144,7 +146,7 @@ public class OperaChain {
 			} else {
 				KnownAddress = Appender.append(KnownAddress, node);
 
-				byte[] tip = store.getBlock(GenesisBlock);
+				byte[] tip = store.getBlock(GENESIS_BYTES);
 				byte[] tipData = store.getBlock(tip);
 				Block tipBlock = Block.DeserializeBlock(tipData);
 
@@ -205,7 +207,7 @@ public class OperaChain {
 		store.updateBlock(block.Hash, blockData);
 
 		if (block.Signature == MyName) {
-			store.updateBlock(GenesisBlock, block.Hash);
+			store.updateBlock(GENESIS_BYTES, block.Hash);
 			MyTip = block.Hash;
 			KnownTips.put(block.Signature, block.Hash);
 			KnownHeight.put(block.Signature, block.Height);
@@ -280,8 +282,6 @@ public class OperaChain {
 	/**
 	 * Network Utils
 	 */
-	ServerSocketChannel ss;
-
 	public void sendData(String addr, byte[] data) {
 		SocketChannel socketChannel;
 		try {
@@ -322,15 +322,13 @@ public class OperaChain {
 		}
 	}
 
-	// Sync is process for request other nodes blocks
+	/**
+	 * Sync is process for request other nodes blocks
+	 */
 	public void Sync() {
 		while (true) {
 			// requestVersion
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			ExecService.sleep(1000); // 1 sec
 
 			for (String node : KnownAddress) {
 				if (node != MyAddress) {
@@ -342,6 +340,10 @@ public class OperaChain {
 		}
 	}
 
+	/**
+	 * Handle a connection
+	 * @param netConn
+	 */
 	public void handleConnection(NetConn netConn) {
 		byte[] request;
 		try {
@@ -427,7 +429,7 @@ public class OperaChain {
 
 	// MakeBlock creates a new block
 	public void MakeBlock(String name) {
-		byte[] tip = store.getBlock(GenesisBlock);
+		byte[] tip = store.getBlock(GENESIS_BYTES);
 		byte[] tipData = store.getBlock(tip);
 		Block tipBlock = Block.DeserializeBlock(tipData);
 		int newHeight = tipBlock.Height + 1;
@@ -439,22 +441,31 @@ public class OperaChain {
 		// UpdateChk = true
 	}
 
-	/**
+	/**********************
 	 * Graph
+	 **********/
+	/**
+	 * Creates a graph
+	 * @return
 	 */
-	// NewGraph is creating graph
 	public Graph NewGraph() {
 		Graph newGraph = new Graph(null, new HashMap<String, Vertex>(), new HashMap<String, Vertex>(),
 				new HashMap<String, Vertex>(), new HashMap<String, Vertex>(), new HashMap<String, Map<String, Long>>(),
 				new Vertex[] {});
 
-		byte[] tip = store.getBlock(GenesisBlock);
+		byte[] tip = store.getBlock(GENESIS_BYTES);
 		newGraph.Tip = BuildGraph(tip, newGraph.ChkVertex, newGraph);
 
 		return newGraph;
 	}
 
-	// BuildGraph initialize graph based on DB
+	/**
+	 * Builds a graph from the DB store
+	 * @param hash
+	 * @param rV
+	 * @param g
+	 * @return
+	 */
 	public Vertex BuildGraph(byte[] hash, Map<String, Vertex> rV, Graph g) {
 		Vertex newVertex = rV.get(new String(hash));
 		if (newVertex != null) {
