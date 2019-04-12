@@ -16,7 +16,10 @@ public class Block {
 	byte[] Hash;
 	int Height;
 
-	// NewBlock is creation of event block
+	/**
+	 * Constructor
+	 * Creates an event block
+	 */
 	public Block(long timestamp, String name, byte[] prevSelfHash, byte[] prevOtherHash, byte[] bs, int height) {
 		Timestamp = timestamp;
 		Signature = name;
@@ -26,12 +29,18 @@ public class Block {
 		Height = height;
 	}
 
+	/**
+	 * Constructor
+	 */
 	public Block(String name, byte[] tip, byte[] bs, int newHeight) {
 		Signature = name;
 		Hash = bs;
 		Height = newHeight;
 	}
 
+	/**
+	 * Constructor
+	 */
 	public static Block NewBlock(String name, byte[] PrevSelfHash, byte[] PrevOtherHash, int height) {
 		Block block = new Block(System.currentTimeMillis(), name, PrevSelfHash, PrevOtherHash, new byte[] {}, height);
 		byte[] data = prepareData(block);

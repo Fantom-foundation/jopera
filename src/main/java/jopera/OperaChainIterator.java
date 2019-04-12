@@ -31,7 +31,7 @@ public class OperaChainIterator {
 
 	/**
 	 * Show represent Current Block
-	 * 
+	 *
 	 * @return
 	 */
 	public Block Show() {
@@ -40,6 +40,9 @@ public class OperaChainIterator {
 
 	public Block getBlock() {
 		byte[] encodedBlock = store.getBlock(currentHash);
+		if (encodedBlock == null) {
+			return null;
+		}
 		Block block = Block.DeserializeBlock(encodedBlock);
 		return block;
 	}

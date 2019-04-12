@@ -4,13 +4,11 @@ import java.io.File;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
-import java.util.Arrays;
-
-import jopera.msg.BlocksMsg;
-import jopera.util.JsonUtils;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+
+import jopera.util.JsonUtils;
 
 public class Utils {
 	public static byte[] commandToBytes(String command) {
@@ -42,7 +40,7 @@ public class Utils {
 	}
 
 	public static <T> T gobDecode(byte[] bytes, Class<T> cls) {
-		return (T) JsonUtils.StringToObject(new String(bytes), BlocksMsg.class);
+		return JsonUtils.StringToObject(new String(bytes), cls);
 	}
 
 	public static boolean dbExists(String dbFile) {
