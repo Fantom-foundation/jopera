@@ -10,10 +10,10 @@ public class Store {
 
 	public static final String blockPrefix = "block";
 
-	DB Db;
+	private DB Db;
 	private ConcurrentNavigableMap<byte[], byte[]> blockMap;
 
-	Store(DB Db) {
+	public Store(DB Db) {
 		this.Db = Db;
 		initDBMaps();
 	}

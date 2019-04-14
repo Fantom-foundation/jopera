@@ -8,18 +8,18 @@ public class Main {
 	 * DNSaddress initializes ip
 	 */
 	public static final String[] DNS_ADDRESSES = new String[] {
-		"localhost:3001",
-		"localhost:3002",
-		"localhost:3003",
-//		"localhost:3004",
-//		"localhost:3005",
-//		"localhost:3006",
-//		"localhost:3007",
-//		"localhost:3008",
-//		"localhost:3009",
-//		"localhost:3010",
-//		"localhost:3011",
-//		"localhost:3012",
+		"localhost:9001",
+		"localhost:9002",
+		"localhost:9003",
+//		"localhost:9004",
+//		"localhost:9005",
+//		"localhost:9006",
+//		"localhost:9007",
+//		"localhost:9008",
+//		"localhost:9009",
+//		"localhost:9010",
+//		"localhost:9011",
+//		"localhost:9012",
 	};
 
 	public static void main(String[] args) {

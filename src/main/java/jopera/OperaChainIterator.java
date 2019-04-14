@@ -4,7 +4,7 @@ package jopera;
  * OperaChainIterator is used to iterate over blockchain blocks
  */
 public class OperaChainIterator {
-	byte[] currentHash;
+	public byte[] currentHash;
 	Store store;
 
 	public OperaChainIterator(byte[] currentHash, Store store) {

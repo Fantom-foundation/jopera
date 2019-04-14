@@ -4,12 +4,13 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 
 public class NetUtils {
 
 	/**
 	 * Creates a server socket and binds to the specified address
-	 * 
+	 *
 	 * @param bindAddr a bind address in the form of ":9000"
 	 * @return
 	 */
@@ -22,6 +23,25 @@ public class NetUtils {
 			serverSocket.socket().bind(new InetSocketAddress(addr, port));
 			return new RResult<>(serverSocket, null);
 		} catch (Exception e) {
+			return new RResult<>(null, error.Errorf(e.getMessage()));
+		}
+	}
+
+	/**
+	 * Connects to socket channel at address
+	 * @param addr
+	 * @return
+	 */
+	public static RResult<SocketChannel> connect(String addr) {
+		int port = NetUtils.parsePort(addr);
+		String host = NetUtils.parseAddress(addr);
+	    SocketChannel sc;
+		try {
+			sc = SocketChannel.open(new InetSocketAddress(host, port));
+		    sc.configureBlocking(false);
+		    System.out.println("initiating connection");
+		    return new RResult<>(sc, null);
+		} catch (IOException e) {
 			return new RResult<>(null, error.Errorf(e.getMessage()));
 		}
 	}

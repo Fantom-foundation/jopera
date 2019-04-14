@@ -2,13 +2,20 @@ package jopera;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -25,6 +32,8 @@ import jopera.util.Logger;
 import jopera.util.NetConn;
 import jopera.util.NetUtils;
 import jopera.util.RResult;
+import jopera.util.TcpTransport;
+import jopera.util.error;
 
 public class OperaChain {
 
@@ -48,12 +57,17 @@ public class OperaChain {
 	boolean UpdateChk;
 	Store store;
 
-	ServerSocketChannel ss;
+	TcpTransport tcp;
+
+	ConcurrentMap<String, Stack<NetConn>> connPool;
 
 	public OperaChain(DB db, String myAddress, byte[] myTip, String myName) {
 		super();
+		connPool = new ConcurrentHashMap<String, Stack<NetConn>>();
+
 		Db = db;
 		MyAddress = myAddress;
+		KnownAddress = null;
 		MyTip = myTip;
 		MyName = myName;
 
@@ -69,6 +83,9 @@ public class OperaChain {
 			Map<String, Integer> knownHeight, byte[] myTip, Map<String, byte[]> knownTips,
 			Map<String, SocketChannel> sendConn, String myName) {
 		super();
+
+		connPool = new ConcurrentHashMap<String, Stack<NetConn>>();
+
 		Db = db;
 		MakeMutex = makeMutex;
 		MyAddress = myAddress;
@@ -158,7 +175,7 @@ public class OperaChain {
 			logger.field("node", node).debug("UpdateAddress");
 
 			if (!node.equals(MyAddress)) {
-				if (!nodeIsKnown(node)) {
+				if (KnownAddress == null || !nodeIsKnown(node)) {
 					KnownAddress = Appender.append(KnownAddress, node);
 				}
 			} else {
@@ -256,7 +273,9 @@ public class OperaChain {
 	}
 
 	public boolean nodeIsKnown(String addr) {
-		logger.field("addr", addr).debug("nodeIsKnown()");
+		logger.field("addr", addr)
+		.field("KnownAddress", KnownAddress == null ? null : Arrays.asList(KnownAddress))
+		.debug("nodeIsKnown()");
 
 		for (String node : KnownAddress) {
 			if (node.equals(addr)) {
@@ -313,20 +332,28 @@ public class OperaChain {
 	/**
 	 * Network Utils
 	 */
-	public void sendData(String addr, byte[] data) {
-		logger.debug("sendData()");
-
+	private SocketChannel lookupChannel(String addr) {
 		SocketChannel socketChannel;
+		socketChannel = SendConn.get(addr);
+		if (socketChannel == null) {
+			logger.debug("sendData() open new socketchannel");
+
+			RResult<SocketChannel> connect = NetUtils.connect(addr);
+			socketChannel = connect.result;
+
+			SendConn.put(addr, socketChannel);
+		}
+		return socketChannel;
+	}
+
+	public void sendData(String addr, byte[] data) {
+		logger.field("addr",  addr).field("MyAddress", MyAddress).debug("sendData()");
+
 		try {
-			// TBD get existing connection
-
-			socketChannel = SocketChannel.open(new InetSocketAddress(addr, ss.socket().getLocalPort()));
-			logger.field("client socket", socketChannel).debug("Just connected to " + socketChannel.socket().getRemoteSocketAddress());
-			socketChannel.configureBlocking(false);
-			socketChannel.socket().setKeepAlive(true);
-			socketChannel.setOption(java.net.StandardSocketOptions.TCP_NODELAY, true);
-
+			SocketChannel socketChannel = lookupChannel(addr);
 			socketChannel.write(ByteBuffer.wrap(data));
+			logger.debug("sendData() finish writing");
+
 			// conn.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -344,42 +371,72 @@ public class OperaChain {
 	}
 
 	public void receiveServer() {
+		logger.field("MyAddress", MyAddress).debug("receiveServer()");
+
+		RResult<ServerSocketChannel> bind = NetUtils.bind(MyAddress);
+		if (bind.err != null) {
+			logger.debug("Server channel error:" + bind.err);
+		}
+		tcp = new TcpTransport(null, bind.result);
+
+		Selector selector = tcp.selector();
 		try {
-			logger.debug("receiveServer()");
-
-			RResult<ServerSocketChannel> bind = NetUtils.bind(MyAddress);
-			if (bind.err != null) {
-				logger.debug("Server channel error:" + bind.err);
-			}
-			ss = bind.result;
-
 			while (true) {
-				SocketChannel conn = ss.accept();
-				//logger.debug("accepting new connection");
-				handleConnection(new NetConn(MyAddress, conn));
-//				ExecService.go(() -> handleConnection(new NetConn(MyAddress, conn)));
+				// Accept incoming connections
+				selector.select();
+
+	            Set<SelectionKey> selectedKeys = selector.selectedKeys();
+	            Iterator<SelectionKey> iter = selectedKeys.iterator();
+
+	            //ByteBuffer buffer = ByteBuffer.allocate(9056);
+	            while (iter.hasNext()) {
+	                SelectionKey key = iter.next();
+
+	                if (key.isAcceptable()) {
+		                logger.field("key", key).debug("accepting");
+
+	                	RResult<SocketChannel> accept = tcp.accept();
+	        			SocketChannel conn = accept.result;
+	        			error err = accept.err;
+	        			if (err != null) {
+	        				logger.field("error", err).error("Failed to accept connection");
+	        				continue;
+	        			}
+	        			logger.field("node", conn.socket().getLocalAddress())
+	        					.field("from", conn.socket().getRemoteSocketAddress())
+	        					.field("conn", conn)
+	        					.info("connection accepted. server socket");
+
+	        			//ExecService.go(() -> handleConn(conn));
+	        			handleConnection(new NetConn(MyAddress, conn));
+
+		                iter.remove();
+	                }
+	            }
 			}
-			// ss.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+//		tcp.close();
 	}
 
 	/**
 	 * Sync is process for request other nodes blocks
 	 */
 	public void Sync() {
+		Random ran = new Random();
 		while (true) {
 			logger.debug("Sync() loop");
 			// requestVersion
-			ExecService.sleep(100); // .1 sec
+			ExecService.sleep(10);
 
-			for (String node : KnownAddress) {
-				if (!node.equals(MyAddress)) {
-					byte[] payload = Utils.gobEncode(new HeightMsg(KnownHeight, MyAddress));
-					byte[] request = Appender.append(Utils.commandToBytes("rstBlocks"), payload);
-					sendData(node, request);
-				}
+			// Peer selection to gossip
+			int peerInd = ran.nextInt(KnownAddress.length);
+			String peer = KnownAddress[peerInd];
+			if (!peer.equals(MyAddress)) {
+				byte[] payload = Utils.gobEncode(new HeightMsg(KnownHeight, MyAddress));
+				byte[] request = Appender.append(Utils.commandToBytes("rstBlocks"), payload);
+				sendData(peer, request);
 			}
 		}
 	}
@@ -395,6 +452,12 @@ public class OperaChain {
 		byte[] request;
 		try {
 			request = netConn.getDec().read().getBytes();
+			logger.field("request", new String(request)).debug("read request");
+
+			if (request == null) {
+				logger.field("request", new String(request)).debug("empty request !!");
+				return;
+			}
 
 			String command = Utils.bytesToCommand(Appender.slice(request, 0, Constants.CMD_LENGTH));
 			 logger.debugf("Received %s command\n", command);
@@ -408,9 +471,9 @@ public class OperaChain {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+		}  finally {
+			//netConn.release();
 		}
-
-		netConn.release();
 	}
 
 	public void handleRstBlocks(byte[] request) {
