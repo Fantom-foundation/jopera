@@ -393,8 +393,6 @@ public class OperaChain {
 	                SelectionKey key = iter.next();
 
 	                if (key.isAcceptable()) {
-		                logger.field("key", key).debug("accepting");
-
 	                	RResult<SocketChannel> accept = tcp.accept();
 	        			SocketChannel conn = accept.result;
 	        			error err = accept.err;
@@ -407,7 +405,7 @@ public class OperaChain {
 	        					.field("conn", conn)
 	        					.info("connection accepted. server socket");
 
-	        			//ExecService.go(() -> handleConn(conn));
+	        			//ExecService.go(() -> handleConnection(new NetConn(MyAddress, conn)));
 	        			handleConnection(new NetConn(MyAddress, conn));
 
 		                iter.remove();
@@ -417,7 +415,7 @@ public class OperaChain {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-//		tcp.close();
+		//tcp.close();
 	}
 
 	/**
@@ -435,7 +433,7 @@ public class OperaChain {
 			String peer = KnownAddress[peerInd];
 			if (!peer.equals(MyAddress)) {
 				byte[] payload = Utils.gobEncode(new HeightMsg(KnownHeight, MyAddress));
-				byte[] request = Appender.append(Utils.commandToBytes("rstBlocks"), payload);
+				byte[] request = Appender.append(Utils.commandToBytes(Constants.REQUEST_HEADER), payload);
 				sendData(peer, request);
 			}
 		}
@@ -460,11 +458,11 @@ public class OperaChain {
 			}
 
 			String command = Utils.bytesToCommand(Appender.slice(request, 0, Constants.CMD_LENGTH));
-			 logger.debugf("Received %s command\n", command);
+			logger.debugf("Received %s command\n", command);
 			switch (command) {
-			case "rstBlocks":
+			case Constants.REQUEST_HEADER:
 				handleRstBlocks(request);
-			case "getBlocks":
+			case Constants.GET_HEADER:
 				handleGetBlocks(request);
 			default:
 				logger.debug("Unknown command!");
@@ -506,7 +504,7 @@ public class OperaChain {
 
 		BlocksMsg data = new BlocksMsg(MyAddress, blocksData);
 		byte[] payload2 = Utils.gobEncode(data);
-		byte[] request2 = Appender.append(Utils.commandToBytes("getBlocks"), payload2);
+		byte[] request2 = Appender.append(Utils.commandToBytes(Constants.GET_HEADER), payload2);
 		sendData(payload.AddrFrom, request2);
 
 		/*

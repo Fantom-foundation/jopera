@@ -6,7 +6,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 import jopera.util.JsonUtils;
 
@@ -30,9 +29,7 @@ public class Utils {
 			}
 		}
 		buf.rewind();
-
-		String cmd = Arrays.toString(buf.array());
-		return cmd;
+		return new String(buf.array());
 	}
 
 	public static byte[] gobEncode(Object data) {
