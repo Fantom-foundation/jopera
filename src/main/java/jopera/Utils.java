@@ -11,14 +11,7 @@ import jopera.util.JsonUtils;
 
 public class Utils {
 	public static byte[] commandToBytes(String command) {
-		int length = command.length();
-		byte[] bytes = new byte[length];
-		char c;
-		for (int i = 0; i < length; ++i) {
-			c = command.charAt(i);
-			bytes[i] = (byte) c;
-		}
-		return bytes;
+		return command.getBytes();
 	}
 
 	public static String bytesToCommand(byte[] bytes) {
@@ -55,6 +48,7 @@ public class Utils {
 
 	/**
 	 * FindAddr find address based on name
+	 *
 	 * @param name
 	 * @return
 	 */
@@ -65,6 +59,7 @@ public class Utils {
 
 	/**
 	 * FindName find name based on address
+	 *
 	 * @param addr
 	 * @return
 	 */

@@ -17,8 +17,7 @@ public class Block {
 	int Height;
 
 	/**
-	 * Constructor
-	 * Creates an event block
+	 * Constructor Creates an event block
 	 */
 	public Block(long timestamp, String name, byte[] prevSelfHash, byte[] prevOtherHash, byte[] bs, int height) {
 		Timestamp = timestamp;

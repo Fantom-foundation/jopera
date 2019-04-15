@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,7 +46,8 @@ public class OperaChain {
 	DB Db;
 	Lock MakeMutex;
 	String MyAddress;
-	String[] KnownAddress;
+	ConcurrentHashMap<String, Integer> knownAddressMap = new ConcurrentHashMap<>();
+	Set<String> KnownAddress;
 	Map<String, Integer> KnownHeight;
 	byte[] MyTip;
 	Map<String, byte[]> KnownTips;
@@ -67,7 +67,7 @@ public class OperaChain {
 
 		Db = db;
 		MyAddress = myAddress;
-		KnownAddress = null;
+		KnownAddress = knownAddressMap.newKeySet();
 		MyTip = myTip;
 		MyName = myName;
 
@@ -79,9 +79,8 @@ public class OperaChain {
 		store = new Store(Db);
 	}
 
-	public OperaChain(DB db, Lock makeMutex, String myAddress, String[] knownAddress,
-			Map<String, Integer> knownHeight, byte[] myTip, Map<String, byte[]> knownTips,
-			Map<String, SocketChannel> sendConn, String myName) {
+	public OperaChain(DB db, Lock makeMutex, String myAddress, String[] knownAddress, Map<String, Integer> knownHeight,
+			byte[] myTip, Map<String, byte[]> knownTips, Map<String, SocketChannel> sendConn, String myName) {
 		super();
 
 		connPool = new ConcurrentHashMap<String, Stack<NetConn>>();
@@ -89,7 +88,8 @@ public class OperaChain {
 		Db = db;
 		MakeMutex = makeMutex;
 		MyAddress = myAddress;
-		KnownAddress = knownAddress;
+		KnownAddress = knownAddressMap.newKeySet();
+		Arrays.asList(knownAddress).stream().forEach(addr -> KnownAddress.add(addr));
 		KnownHeight = knownHeight;
 		MyTip = myTip;
 		KnownTips = knownTips;
@@ -117,7 +117,7 @@ public class OperaChain {
 		}
 
 		DB db = DBMaker.fileDB(new File(dbFile)).transactionEnable().closeOnJvmShutdown().fileChannelEnable().make();
-		//DB db = DBMaker.memoryDB().make();
+		// DB db = DBMaker.memoryDB().make();
 
 		Store store = new Store(db);
 
@@ -146,7 +146,7 @@ public class OperaChain {
 		Block genesis = Block.NewBlock(name, null, null, 1);
 
 		DB db = DBMaker.fileDB(new File(dbFile)).transactionEnable().closeOnJvmShutdown().fileChannelEnable().make();
-		//DB db = DBMaker.memoryDB().make();
+		// DB db = DBMaker.memoryDB().make();
 
 		Store store = new Store(db);
 		store.updateBlock(genesis.Hash, genesis.Serialize());
@@ -169,38 +169,34 @@ public class OperaChain {
 	 * UpdateAddress initializes IP
 	 */
 	public void UpdateAddress() {
-		logger.field("dns-addresses", Arrays.asList(Main.DNS_ADDRESSES))
-			.field("MyAddress", MyAddress).debug("UpdateAddress");
-		for (String node : Main.DNS_ADDRESSES) {
-			logger.field("node", node).debug("UpdateAddress");
+		logger.field("dns-addresses", Arrays.asList(Main.DNS_ADDRESSES)).field("MyAddress", MyAddress)
+				.debug("UpdateAddress");
+		for (String addr : Main.DNS_ADDRESSES) {
+			logger.field("node", addr).debug("UpdateAddress");
+			KnownAddress.add(addr);
 
-			if (!node.equals(MyAddress)) {
-				if (KnownAddress == null || !nodeIsKnown(node)) {
-					KnownAddress = Appender.append(KnownAddress, node);
-				}
-			} else {
-				KnownAddress = Appender.append(KnownAddress, node);
-
+			if (addr.equals(MyAddress)) {
 				byte[] tip = store.getBlock(GENESIS_BYTES);
 				byte[] tipData = store.getBlock(tip);
 				Block tipBlock = Block.DeserializeBlock(tipData);
 
-				String nodeName = Utils.FindName(node);
+				String nodeName = Utils.FindName(addr);
+				logger.field("nodeName", nodeName).field("node", addr).debug("UpdateAddress get nodename");
+
 				KnownTips.put(nodeName, tip);
 				KnownHeight.put(nodeName, tipBlock.Height);
 			}
 
-			logger.field("KnownAddress",  Arrays.asList(KnownAddress))
-				.field("KnownTips", Arrays.toString(KnownTips.entrySet().toArray()))
-				.field("KnownHeight",Arrays.toString(KnownHeight.entrySet().toArray()))
-				.debug("UpdateAddress");
+			logger.field("KnownAddress", Arrays.asList(KnownAddress))
+					.field("KnownTips", Arrays.toString(KnownTips.entrySet().toArray()))
+					.field("KnownHeight", Arrays.toString(KnownHeight.entrySet().toArray())).debug("UpdateAddress");
 		}
 	}
 
 	// UpdateState initializes state of Operachain
 	public void UpdateState() {
 
-		logger.field("MyTip",  MyTip).debug("UpdateState");
+		logger.field("MyTip", MyTip).debug("UpdateState");
 
 		HashMap<String, Boolean> chk = new HashMap<String, Boolean>();
 		String[] mylist = new String[] { new String(MyTip) };
@@ -217,7 +213,7 @@ public class OperaChain {
 			}
 			String blockAddr = String.format("localhost:%s", block.Signature);
 			if (!nodeIsKnown(blockAddr)) {
-				KnownAddress = Appender.append(KnownAddress, blockAddr);
+				KnownAddress.add(blockAddr);
 				KnownHeight.put(block.Signature, block.Height);
 				KnownTips.put(block.Signature, block.Hash);
 			} else {
@@ -244,6 +240,8 @@ public class OperaChain {
 
 	// AddBlock saves the block into the blockchain
 	public void AddBlock(Block block) {
+		logger.field("block", block).debug("AddBlock() ");
+
 		byte[] blockInDb = store.getBlock(block.Hash);
 		if (blockInDb != null) {
 			// error
@@ -265,7 +263,7 @@ public class OperaChain {
 					KnownTips.put(block.Signature, block.Hash);
 				}
 			} else {
-				KnownAddress = Appender.append(KnownAddress, blockAddr);
+				KnownAddress.add(blockAddr);
 				KnownHeight.put(block.Signature, block.Height);
 				KnownTips.put(block.Signature, block.Hash);
 			}
@@ -273,17 +271,9 @@ public class OperaChain {
 	}
 
 	public boolean nodeIsKnown(String addr) {
-		logger.field("addr", addr)
-		.field("KnownAddress", KnownAddress == null ? null : Arrays.asList(KnownAddress))
-		.debug("nodeIsKnown()");
-
-		for (String node : KnownAddress) {
-			if (node.equals(addr)) {
-				return true;
-			}
-		}
-
-		return false;
+		logger.field("addr", addr).field("KnownAddress", KnownAddress == null ? null : Arrays.asList(KnownAddress))
+				.debug("nodeIsKnown()");
+		return KnownAddress.contains(addr);
 	}
 
 	// Iterator returns a OperachainIter
@@ -347,26 +337,17 @@ public class OperaChain {
 	}
 
 	public void sendData(String addr, byte[] data) {
-		logger.field("addr",  addr).field("MyAddress", MyAddress).debug("sendData()");
+		logger.field("addr", addr).field("MyAddress", MyAddress)
+			.field("data", new String(data)).debug("sendData()");
 
 		try {
 			SocketChannel socketChannel = lookupChannel(addr);
 			socketChannel.write(ByteBuffer.wrap(data));
 			logger.debug("sendData() finish writing");
-
-			// conn.close();
 		} catch (IOException e) {
-			e.printStackTrace();
-
+			// e.printStackTrace();
+			logger.debug("Error sending data" + e.getMessage());
 			logger.debugf("%s is not available\n", addr);
-
-			// var updatedNodes []string
-			// for _, node := range knownAddress {
-			// if node != addr {
-			// updatedNodes = append(updatedNodes, node)
-			// }
-			// }
-			// knownAddress = updatedNodes
 		}
 	}
 
@@ -385,62 +366,61 @@ public class OperaChain {
 				// Accept incoming connections
 				selector.select();
 
-	            Set<SelectionKey> selectedKeys = selector.selectedKeys();
-	            Iterator<SelectionKey> iter = selectedKeys.iterator();
+				Set<SelectionKey> selectedKeys = selector.selectedKeys();
+				Iterator<SelectionKey> iter = selectedKeys.iterator();
 
-	            //ByteBuffer buffer = ByteBuffer.allocate(9056);
-	            while (iter.hasNext()) {
-	                SelectionKey key = iter.next();
+				// ByteBuffer buffer = ByteBuffer.allocate(9056);
+				while (iter.hasNext()) {
+					SelectionKey key = iter.next();
 
-	                if (key.isAcceptable()) {
-	                	RResult<SocketChannel> accept = tcp.accept();
-	        			SocketChannel conn = accept.result;
-	        			error err = accept.err;
-	        			if (err != null) {
-	        				logger.field("error", err).error("Failed to accept connection");
-	        				continue;
-	        			}
-	        			logger.field("node", conn.socket().getLocalAddress())
-	        					.field("from", conn.socket().getRemoteSocketAddress())
-	        					.field("conn", conn)
-	        					.info("connection accepted. server socket");
+					if (key.isAcceptable()) {
+						RResult<SocketChannel> accept = tcp.accept();
+						SocketChannel conn = accept.result;
+						error err = accept.err;
+						if (err != null) {
+							logger.field("error", err).error("Failed to accept connection");
+							continue;
+						}
+						logger.field("node", conn.socket().getLocalAddress())
+								.field("from", conn.socket().getRemoteSocketAddress()).field("conn", conn)
+								.info("connection accepted. server socket");
 
-	        			//ExecService.go(() -> handleConnection(new NetConn(MyAddress, conn)));
-	        			handleConnection(new NetConn(MyAddress, conn));
+						//ExecService.go(() -> handleConnection(new NetConn(MyAddress, conn)));
+						handleConnection(new NetConn(MyAddress, conn));
 
-		                iter.remove();
-	                }
-	            }
+						iter.remove();
+					}
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		//tcp.close();
+		// tcp.close();
 	}
 
 	/**
 	 * Sync is process for request other nodes blocks
 	 */
 	public void Sync() {
-		Random ran = new Random();
 		while (true) {
 			logger.debug("Sync() loop");
 			// requestVersion
-			ExecService.sleep(10);
+			ExecService.sleep(100);
 
 			// Peer selection to gossip
-			int peerInd = ran.nextInt(KnownAddress.length);
-			String peer = KnownAddress[peerInd];
-			if (!peer.equals(MyAddress)) {
-				byte[] payload = Utils.gobEncode(new HeightMsg(KnownHeight, MyAddress));
-				byte[] request = Appender.append(Utils.commandToBytes(Constants.REQUEST_HEADER), payload);
-				sendData(peer, request);
+			for (String peer : KnownAddress) {
+				if (!peer.equals(MyAddress)) {
+					byte[] payload = Utils.gobEncode(new HeightMsg(KnownHeight, MyAddress));
+					byte[] request = Appender.append(Utils.commandToBytes(Constants.REQUEST_HEADER), payload);
+					sendData(peer, request);
+				}
 			}
 		}
 	}
 
 	/**
 	 * Handle a connection
+	 *
 	 * @param netConn
 	 */
 	public void handleConnection(NetConn netConn) {
@@ -469,20 +449,33 @@ public class OperaChain {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-		}  finally {
-			//netConn.release();
+		} finally {
+			// netConn.release();
 		}
 	}
 
 	public void handleRstBlocks(byte[] request) {
+		logger.field("request", new String(request)).debug("handleRstBlocks() ");
+
 		byte[] bytes = Appender.sliceFromToEnd(request, Constants.CMD_LENGTH);
+		logger.field("bytes", new String(bytes)).debug("get request data");
+
 		HeightMsg payload = Utils.gobDecode(bytes, HeightMsg.class);
+		logger.field("payload", payload).debug("get payload");
 
 		Block[] blocksData = null;
 
 		for (String addr : KnownAddress) {
 			String node = Utils.FindName(addr);
-			if (KnownHeight.get(node) > payload.Heights.get(node)) {
+			logger.field("nodeName", node).field("addr", addr).debug("handleRstBlocks get nodename");
+
+			logger.field("KnownHeight.get(node)", KnownHeight.get(node))
+				.field("payload.Heights.get(node)", payload.Heights.get(node))
+				.debug("handleRstBlocks if-then");
+
+			Integer nodeHeight = payload.Heights.get(node);
+			if (nodeHeight == null || KnownHeight.get(node) > nodeHeight) {
+
 				byte[] ptr = KnownTips.get(node);
 				OperaChainIterator oci = Iterator(ptr);
 				while (true) {
@@ -491,7 +484,7 @@ public class OperaChain {
 					}
 					Block block = oci.Show();
 
-					if (block.Height > payload.Heights.get(node)) {
+					if (block.Height > nodeHeight) {
 						blocksData = Appender.append(blocksData, block);
 					} else {
 						break;
@@ -501,6 +494,8 @@ public class OperaChain {
 				}
 			}
 		}
+
+		logger.field("MyAddress", MyAddress).debug("handleRstBlocks end loop");
 
 		BlocksMsg data = new BlocksMsg(MyAddress, blocksData);
 		byte[] payload2 = Utils.gobEncode(data);
@@ -515,28 +510,37 @@ public class OperaChain {
 	}
 
 	public void handleGetBlocks(byte[] request) {
+		logger.field("request", new String(request)).debug("handleGetBlocks() ");
+
 		byte[] bytes = Appender.sliceFromToEnd(request, Constants.CMD_LENGTH);
 		BlocksMsg payload = Utils.gobDecode(bytes, BlocksMsg.class);
 
-		MakeMutex.lock();
+		try {
+			logger.debug("handleGetBlocks() before getting lock");
+			MakeMutex.lock();
 
-		Block[] blocksData = payload.Blocks;
-		boolean chk = false;
-		for (Block block : blocksData) {
-			AddBlock(block);
-			chk = true;
+			logger.debug("handleGetBlocks() acquired lock");
+
+			Block[] blocksData = payload.Blocks;
+			boolean chk = false;
+			for (Block block : blocksData) {
+				AddBlock(block);
+				chk = true;
+			}
+
+			if (chk) {
+				// logger.println("Received a new block")
+				MakeBlock(Utils.FindName(payload.AddrFrom));
+			}
+
+		} finally {
+			MakeMutex.unlock();
 		}
-
-		if (chk) {
-			// logger.println("Received a new block")
-			MakeBlock(Utils.FindName(payload.AddrFrom));
-		}
-
-		MakeMutex.unlock();
 	}
 
 	// MakeBlock creates a new block
 	public void MakeBlock(String name) {
+		logger.field("name", name).debug("MakeBlock() ");
 		byte[] tip = store.getBlock(GENESIS_BYTES);
 		byte[] tipData = store.getBlock(tip);
 		Block tipBlock = Block.DeserializeBlock(tipData);
@@ -554,6 +558,7 @@ public class OperaChain {
 	 **********/
 	/**
 	 * Creates a graph
+	 *
 	 * @return
 	 */
 	public Graph NewGraph() {
@@ -569,6 +574,7 @@ public class OperaChain {
 
 	/**
 	 * Builds a graph from the DB store
+	 *
 	 * @param hash
 	 * @param rV
 	 * @param g
